@@ -34,6 +34,11 @@ public:
 		return keysVector;
 	}
 
+	set<string> getVariantsForKey( string key)
+	{
+		return words.at( key).getVariants();
+	}
+
 	bool loadFromFile( string filePath, int minWordLen, string searchString)
 	{
 		anagramSeed.load( searchString);
@@ -47,7 +52,7 @@ public:
 				Word newWord;
 				string newKey = newWord.load(readLine);
 
-				if( !isSubset( newKey, anagramSeed.key))
+				if( !isSubset( newKey, anagramSeed.key) || newKey.length() < minWordLen)
 					continue;
 
 				//if key not in map, insert new word set
@@ -71,16 +76,36 @@ public:
 		return false;		
 	}
 
+	//Return a string formed by all letters in str2 that are not in str1
+	static string subtractStringFrom( string str1, string str2)
+	{
+		vector<char> vString1( str1.begin(), str1.end());
+		vector<char> vString2( str2.begin(), str2.end());
+		vector<char>::iterator foundAt;
+		vector<char>::iterator vstwoIt;
+		for( vstwoIt = vString2.begin(); vstwoIt != vString2.end(); vstwoIt++)
+		{
+			foundAt = find( vString1.begin(), vString1.end(), *vstwoIt);
+			if( foundAt != vString1.end())
+			{
+				vString1.erase(foundAt);
+			}
+		}
+		
+		string result( vString1.begin(), vString1.end());		
+		return result;
+	}
+
+	//Check if chunk is a subset of universe
 	static bool isSubset( string chunk, string universe)
 	{
 		if( chunk.length() > universe.length())
 		{
 			return false;
 		}
-
-		vector<char> vChunk(chunk.begin(), chunk.end());
-		vector<char> vUniverse( universe.begin(), universe.end());
 		//cout << "\nChunk: "<<chunk<<" Universe: "<<universe;
+		vector<char> vChunk(chunk.begin(), chunk.end());
+		vector<char> vUniverse( universe.begin(), universe.end());		
 		vector<char>::iterator vcIt;
 		vector<char>::iterator foundAt;
 		for( vcIt = vChunk.begin(); vcIt != vChunk.end(); vcIt++)
@@ -103,7 +128,7 @@ public:
 		}*/
 		return true;
 	}
-
+	
 	void dumpAnagramSeed()
 	{
 		cout << "["<< anagramSeed.key << "] -> ["<< anagramSeed.getFirstVariant() << "]\n";

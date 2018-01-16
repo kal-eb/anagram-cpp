@@ -30,6 +30,11 @@ public:
   		return key;	
 	}
 
+	set<string> getVariants()
+	{
+		return variants;
+	}
+
 	bool addVariant( string variant)
 	{
 		pair<set<string>::iterator, bool> result;
