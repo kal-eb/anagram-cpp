@@ -13,7 +13,10 @@ int main( int argc, char *argv[])
 	else
 	{
 		AnagramFinder aFinder;
-		aFinder.initialize( argv[1], atoi(argv[2]), argv[3]);
+		if( aFinder.initialize( argv[1], atoi(argv[2]), argv[3]))
+		{
+			aFinder.getAllAnagrams();
+		}
 	}
 
 	return 0;
