@@ -7,14 +7,26 @@ class AnagramFinder{
 public:	
 	Dictionary dictionary;
 	int minWordLength;
+	vector<string> searchStringV;
 
 	AnagramFinder(){}
 
 	bool initialize( string filePath, int minWordLen, string searchString){
 		minWordLength = minWordLen;
+		setSearchStringV(searchString);
 		return dictionary.loadFromFile( filePath, minWordLen, searchString);
 	}
 
+	void setSearchStringV( string origStr)
+	{	
+		string strTok;
+		istringstream inputStream( origStr);
+		while( getline( inputStream, strTok, ' '))
+		{
+			searchStringV.push_back( strTok);
+		}	
+
+	}
 
 	set<vector<string>> getAllAnagrams()
 	{
@@ -25,7 +37,6 @@ public:
 		for( dkIt = dictKeys.begin(); dkIt != dictKeys.end(); dkIt++)
 		{
 			//cout << "Iteration for Dictionary entry: "<<*dkIt<<"\n";
-			//
 			set<set<string>> currDictWordAnagramsKeys = searchAnagramsKeys( dictKeys, dkIt, dictKeys.end(), anagSeed);
 			set<vector<string>> currAnagrams;
 			if( !currDictWordAnagramsKeys.empty())
@@ -43,6 +54,15 @@ public:
 				result.insert( currAnagrams.begin(), currAnagrams.end());				
 			}
 		}
+
+		//Just to be sure adding the original search string		
+		sort(searchStringV.begin(), searchStringV.end());
+		vector<vector<string>> auxV;
+		auxV.insert(auxV.begin(),searchStringV);				
+		set<vector<string>> origSearchSet = getPermutations( auxV);
+		dump_nestedVecSet( origSearchSet);		
+
+		result.insert(origSearchSet.begin(), origSearchSet.end());
 		//dump_nestedVecSet(result);
 		return result;
 	}
@@ -90,7 +110,7 @@ public:
 		set<vector<string>> sResult;
 		vector<vector<string>>::iterator ivIt;
 		for( ivIt= inputVector.begin(); ivIt != inputVector.end(); ivIt++)
-		{			
+		{		
 			vector<string> curV = *ivIt;
 			do
 			{
@@ -171,8 +191,6 @@ public:
 			{
 				set<set<string>> nestedAnagramSet;
 				//check next entry in dictionary keys set
-				//vector<string>::iterator innerIt;				
-				//for( innerIt = currposIt++; innerIt != lastposIt; innerIt++)
 				for( currposIt++; currposIt != lastposIt; currposIt++)
 				{
 					//This is the anagram set for current dictionary key
@@ -181,11 +199,8 @@ public:
 					if( !nestedAnagramSetRec.empty())
 					{
 						//to form a real anagram, add the curernt dictionary key to all anagrms found
-						//cout << "Oringal nested string set: \n";
 						//dump_nestedStrSet(nestedAnagramSetRec);
-						//cout << "Now adding " << currDictionaryKey << "\n";
 						set<set<string>>updatedNestedAnagramSetRec = addWordToAllAnagramsSets( currDictionaryKey, nestedAnagramSetRec);
-						//dump_nestedStrSet(updatedNestedAnagramSetRec);
 						if( !updatedNestedAnagramSetRec.empty())
 							nestedAnagramSet.insert( updatedNestedAnagramSetRec.begin(), updatedNestedAnagramSetRec.end());
 					}

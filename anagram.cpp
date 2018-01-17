@@ -32,6 +32,7 @@ int main( int argc, char *argv[])
 			{
 				cout <<"["<< mIt->first << "] -> " << mIt->second << "\n";
 			}
+			cout << "Anagrams found: "<<phrases.size()<<"\n";
 
 			vector<string>::iterator solIt;
 			for( solIt = md5hashSolutions.begin(); solIt != md5hashSolutions.end(); solIt++)
