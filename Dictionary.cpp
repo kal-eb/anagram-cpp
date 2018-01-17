@@ -66,7 +66,7 @@ public:
 					words.at( newKey).addVariant(newVariant);
 				}
 			}	
-			dumpDictionary();
+			//dumpDictionary();
 			//dumpAnagramSeed();
 			return true;
 		}

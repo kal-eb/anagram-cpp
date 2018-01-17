@@ -1,4 +1,5 @@
 #include "Dictionary.cpp"
+#include "md5.h"
 
 using namespace std;
 
@@ -15,46 +16,45 @@ public:
 	}
 
 
-	set<set<string>> getAllAnagrams()
+	set<vector<string>> getAllAnagrams()
 	{
 		vector<string> dictKeys = dictionary.getWordsKeys();
 		vector<string>::iterator dkIt;
 		string anagSeed = dictionary.getSeed().key;
-		set<set<string>> result;
+		set<vector<string>> result;
 		for( dkIt = dictKeys.begin(); dkIt != dictKeys.end(); dkIt++)
 		{
 			//cout << "Iteration for Dictionary entry: "<<*dkIt<<"\n";
 			//
 			set<set<string>> currDictWordAnagramsKeys = searchAnagramsKeys( dictKeys, dkIt, dictKeys.end(), anagSeed);
-			set<set<string>> currAnagrams;
+			set<vector<string>> currAnagrams;
 			if( !currDictWordAnagramsKeys.empty())
 			{
 				//dump_nestedStrSet(currDictWordAnagramsKeys);
 				set<set<string>>::iterator cdqakIt;
 				for( cdqakIt=currDictWordAnagramsKeys.begin(); cdqakIt != currDictWordAnagramsKeys.end(); cdqakIt++ )
 				{
-					set<set<string>> thisIterationAnagrams;
-					thisIterationAnagrams = buildAnagramsFromKeysSet( *cdqakIt);
+					set<vector<string>> thisIterationAnagrams = buildAnagramsFromKeysSet( *cdqakIt);
 					currAnagrams.insert( thisIterationAnagrams.begin(), thisIterationAnagrams.end());
 				}
 			}
 			if( !currAnagrams.empty())
 			{
-				dump_nestedStrSet(currAnagrams);
+				result.insert( currAnagrams.begin(), currAnagrams.end());				
 			}
 		}
-
+		//dump_nestedVecSet(result);
 		return result;
 	}
 
 	//Retrieve all variants from anagrams key set and calls method for combine them
-	set<set<string>> buildAnagramsFromKeysSet( set<string> anagramKeys )
+	set<vector<string>> buildAnagramsFromKeysSet( set<string> anagramKeys )
 	{
-		set<set<string>> anagramsSet, anagramsCombinedSet;
+		set<set<string>> anagramsSet;
 
 		if( anagramKeys.empty())
 		{
-			set<set<string>> empty;
+			set<vector<string>> empty;
 			return empty;
 		}
 
@@ -66,54 +66,74 @@ public:
 			anagramsSet.insert(keyVariants);
 		}
 
-		anagramsCombinedSet = getCombinedAnagramsSet(anagramsSet);
-		return anagramsCombinedSet;
-		//return anagramsSet;
+		set<vector<string>> anagramsCombinedSet = getCombinedAnagramsSet(anagramsSet);
+		return anagramsCombinedSet;		
 	}
 	
-	set<set<string>> getCombinedAnagramsSet( set<set<string>> multiSet)
+	set<vector<string>> getCombinedAnagramsSet( set<set<string>> multiSet)
 	{
 		if( multiSet.empty())
 		{
-			set<set<string>> empty;
+			set<vector<string>> empty;
 			return empty;
 		}
-		set<set<string>> cartesianProd;
-		cartesianProd = getCartesianProduct( multiSet);
 
-		return cartesianProd;
+		vector<vector<string>> vCartesianProduct = getCartesianProduct( toNestedVector(multiSet));
+		//dump_nestedStrVec(vCartesianProduct);
+		set<vector<string>> allPermutationsSet = getPermutations(vCartesianProduct);
+		//dump_nestedVecSet(allPermutationsSet);
+		return allPermutationsSet;
 	}
 
-	set<set<string>> getCartesianProduct( set<set<string>> multiSet)
+	set<vector<string>> getPermutations( vector<vector<string>> inputVector)
 	{
-		set<set<string>> multipliedMultiset;
-		set<string> tempStrSet;
-
-		set<set<string>>::iterator msIt;		
-		for( msIt = multiSet.begin(); msIt != multiSet.end(); msIt++)
-		{
-			set<string>::iterator sIt;
-			set<string> stringSet = *msIt;
-			for( sIt = stringSet.begin(); sIt != stringSet.end(); sIt++)
+		set<vector<string>> sResult;
+		vector<vector<string>>::iterator ivIt;
+		for( ivIt= inputVector.begin(); ivIt != inputVector.end(); ivIt++)
+		{			
+			vector<string> curV = *ivIt;
+			do
 			{
-				multipliedMultiset.insert( *sIt);
-				set<set<string>>::iterator mmsIt;		
-				for( mmsIt = ++msIt; mmsIt != multiSet.end(); mmsIt++)
-				{
-					set<string>::iterator mmmsIt;
-					set<string> mmstringSet = *mmsIt;
-					for( mmmsIt = mmstringSet.begin(); mmmsIt != mmstringSet.end(); mmmsIt++)
-					{
-						tempStrSet.insert( *mmmsIt);						
-					}
-				}
-				multipliedMultiset.insert( stringSet);
-				tempStrSet.erase( tempStrSet.begin(), tempStrSet.end());
-			}
+				vector<string> tmpSet( curV.begin(), curV.end());
+				sResult.insert( tmpSet);
+			}while( next_permutation( curV.begin(), curV.end()));
 		}
 
-		return multipliedMultiset;
+		return sResult;
 	}
+
+	vector<vector<string>> getCartesianProduct (const vector<vector<string>>& inputVector)
+	{
+	    vector<vector<string>> vResult = {{}};
+	    for( auto& ivIt : inputVector)
+	    {
+	        vector<vector<string>> auxVector;
+	        for (auto& rvIt : vResult)
+	        {
+	            for (auto iivIt : ivIt)
+	            {
+	                auxVector.push_back(rvIt);
+	                auxVector.back().push_back(iivIt);
+	            }
+	        }
+	        vResult.swap(auxVector);
+	    }
+	    return vResult;
+	}
+
+	vector<vector<string>> toNestedVector( set<set<string>> multiSet)
+	{
+		vector<vector<string>> vResult;
+		set<set<string>>::iterator msIt;
+		for( msIt = multiSet.begin(); msIt != multiSet.end(); msIt++)
+		{
+			vector<string> sToV( msIt->begin(), msIt->end());
+			vResult.push_back(sToV);
+		}
+
+		return vResult;
+	}
+
 
 	//Recursive method for searching anagrams for all dictionary keys that match anagramSeed criteria
 	set<set<string>> searchAnagramsKeys( vector<string> dictionaryKeys, vector<string>::iterator currposIt, vector<string>::iterator lastposIt, string anagramSeed)
@@ -203,6 +223,69 @@ public:
 		}
 
 		return newNestedStrSet;
+	}
+
+	map<string,string> convertToPhrase( set<vector<string>> nestedVecSet)
+	{
+		map<string, string> resultMap;
+		set<vector<string>>::iterator nvIt;
+		for( nvIt = nestedVecSet.begin(); nvIt != nestedVecSet.end(); nvIt++)
+		{
+			vector<string> currVec = *nvIt;
+			vector<string>::iterator cvIt;
+			string str = "";
+			for( cvIt = currVec.begin(); cvIt != currVec.end(); cvIt++)
+			{
+				string sp = str.length() > 0 ? " " : "";
+				str += sp + *cvIt;
+			}
+
+			char *cstr = new char[str.length() + 1];
+			strcpy(cstr, str.c_str());
+			
+			//using third party md5 library
+			MD5 md5 ;
+			const char *md5sum = md5.digestString( cstr);
+			string strMD5( md5sum);
+			delete [] cstr;
+
+			resultMap.insert(pair<string, string>( strMD5, str));
+			//cout << str << "\n";
+		}
+
+		return resultMap;
+	}
+
+	void dump_nestedVecSet( set<vector<string>> nestedVecSet)
+	{
+		set<vector<string>>::iterator nnsIt;
+		cout<<"*********** printing nested string vector****************\n";
+		for( nnsIt = nestedVecSet.begin(); nnsIt != nestedVecSet.end(); nnsIt++)
+		{
+			vector<string> currSet = *nnsIt;
+			vector<string>::iterator csIt;
+			for( csIt = currSet.begin(); csIt != currSet.end(); csIt++)
+			{
+				cout << *csIt << " ";
+			}
+			cout << "\n";
+		}		
+	}
+
+	void dump_nestedStrVec( vector<vector<string>> nestedStrVec)
+	{
+		vector<vector<string>>::iterator nnsIt;
+		cout<<"*********** printing nested string vector****************\n";
+		for( nnsIt = nestedStrVec.begin(); nnsIt != nestedStrVec.end(); nnsIt++)
+		{
+			vector<string> currSet = *nnsIt;
+			vector<string>::iterator csIt;
+			for( csIt = currSet.begin(); csIt != currSet.end(); csIt++)
+			{
+				cout << *csIt << " ";
+			}
+			cout << "\n";
+		}
 	}
 
 	void dump_nestedStrSet( set<set<string>> nestedStrSet)
